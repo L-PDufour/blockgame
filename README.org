@@ -1,0 +1,9 @@
+* Raywasm
+** Objectif
+*** Me pratiquer avec Emacs | C
+*** Apprendre sur raylib | wasm
+*** Convertir quelques projets avec raylib
+*** Montrer ces prohets sur mon site web
+** Planif
+*** Pratiquer la camera 2d
+*** Mettre des textures

@@ -22,3 +22,5 @@ clean:
 # Rebuild the project
 rebuild: clean $(OUT)
 
+run: rebuild
+	./$(OUT)
