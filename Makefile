@@ -1,12 +1,12 @@
-
 RAYLIB ?= ./external/raylib-5.5/src/
-
+INC_DIR = inc
+SRC_DIR = src
 CC = gcc
-CFLAGS = -std=c99 -Wall -Wextra -I$(RAYLIB)
+CFLAGS = -std=c99 -Wall -Wextra -I$(RAYLIB) -I$(INC_DIR)
 LIBS = -L$(RAYLIB) -lraylib -lm -lpthread -ldl -lGL -lX11 -lwayland-client -lwayland-cursor
 
 # Source files
-SRCS = main.c
+SRCS = $(SRC_DIR)/main.c $(SRC_DIR)/input.c
 
 # Output binary
 OUT = game
@@ -24,3 +24,8 @@ rebuild: clean $(OUT)
 
 run: rebuild
 	./$(OUT)
+
+check-syntax:
+	$(CC) $(CFLAGS) -Wall -Wextra -Wpedantic -fsyntax-only $(SRCS)
+
+.PHONY: clean rebuild run check-syntax
