@@ -6,7 +6,7 @@ CFLAGS = -std=c99 -Wall -Wextra -I$(RAYLIB) -I$(INC_DIR)
 LIBS = -L$(RAYLIB) -lraylib -lm -lpthread -ldl -lGL -lX11 -lwayland-client -lwayland-cursor
 
 # Source files
-SRCS = $(SRC_DIR)/main.c $(SRC_DIR)/input.c
+SRCS = $(SRC_DIR)/main.c $(SRC_DIR)/input.c $(SRC_DIR)/worldDrawing.c
 
 # Output binary
 OUT = game
