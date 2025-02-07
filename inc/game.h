@@ -54,9 +54,12 @@ typedef enum {
 } e_GrassTextures;
 
 typedef enum {
-  GRASSLANDS,
-  MOUNTAINS,
-  FOREST,
+  BIOME_WATER,
+  BIOME_BEACH,
+  BIOME_PLAINS,
+  BIOME_FOREST,
+  BIOME_HILL,
+  BIOME_MOUNTAIN,
 } e_BiomeTypes;
 
 enum Direction { DOWN, UP, LEFT, RIGHT };
@@ -67,7 +70,7 @@ typedef struct s_assetManager {
   Texture2D *grassTextures;     // Environment textures (grass etc.)
   Rectangle grassRects[12];
   Texture2D *biomeTextures;
-  Rectangle biomeRects[12];
+  Rectangle biomeRects[6];
 } s_AssetManager;
 
 typedef struct {
@@ -78,6 +81,7 @@ typedef struct {
     s_WorldTile** tiles;  // 2D array of tiles
     int width;
     int height;
+  RenderTexture2D mapTexture;
 } s_WorldMap;
 
 typedef struct s_entity {

@@ -7,25 +7,7 @@ s_GameState *state = NULL;
 
 s_GameState *getGameState() {
   if (state == NULL) {
-    state = malloc(sizeof(s_GameState));
-    if (state == NULL) {
-      printf("Failed to allocate memory for game state\n");
-      return NULL;
-    }
-    state->assets = malloc(sizeof(s_AssetManager));
-    if (state->assets == NULL) {
-      free(state);
-      printf("Failed to allocate memory for asset manager\n");
-      return NULL;
-    }
-    // Initialize other fields as necessary
-    state->hero = malloc(sizeof(s_Entity));
-    if (state->hero == NULL) {
-      free(state->assets);
-      free(state);
-      printf("Failed to allocate memory for hero\n");
-      return NULL;
-    }
+    return NULL;
   }
 
   return state;
@@ -55,9 +37,9 @@ void drawCharacter(e_CharacterType character, Vector2 position) {
 
 void drawScene() {
   s_GameState *state = getGameState();
+
   if (state == NULL)
     return; // Ensure state is not NULL
-  drawWorldMap();
   // Draw the character at the hero's position
   drawCharacter(CHARACTER_1, (Vector2){.x = state->hero->entityDest.x,
                                        .y = state->hero->entityDest.y});
@@ -101,6 +83,11 @@ void render() {
   BeginDrawing();
   BeginMode2D(state->camera); // You were missing BeginMode2D
   ClearBackground(RAYWHITE);
+      DrawTextureRec(state->worldMap->mapTexture.texture,
+                   (Rectangle){ 0, 0,
+                                (float)state->worldMap->mapTexture.texture.width,
+                                -(float)state->worldMap->mapTexture.texture.height },
+                   (Vector2){ 0, 0 }, WHITE);
   drawScene();
   EndMode2D();
   EndDrawing();
@@ -127,72 +114,57 @@ void loadAssets() {
     int y = (i / 3) * TILE_SIZE;
     state->assets->characterRects[i] = (Rectangle){x, y, TILE_SIZE, TILE_SIZE};
   }
-  *state->assets->grassTextures = LoadTexture("ressources/grass.png");
-  *state->assets->biomeTextures = LoadTexture("ressources/biome.png");
-}
-
-void generateBiome(s_WorldMap *map, e_BiomeTypes type) {
-
-  for (int y = 0; y < map->height; y++) {
-    for (int x = 0; x < map->width; x++) {
-
-    }
+  for (int i = 0; i < 6; i++) {
+    int x = i * TILE_SIZE; // Just multiply by i since it's a single row
+    int y = 0;             // y stays 0 since we're only using one row
+    state->assets->biomeRects[i] = (Rectangle){x, y, TILE_SIZE, TILE_SIZE};
   }
+  *state->assets->grassTextures = LoadTexture("ressources/grass.png");
+  *state->assets->biomeTextures = LoadTexture("ressources/biomes.png");
 }
 
-void generate_patch(s_WorldMap* map, e_BiomeTypes biome_type, int num_patches, int min_size, int max_size, int irregular) {
-    srand(time(NULL)); // Seed random number generator
-                printf("ici\n");
-    for (int p = 0; p < num_patches; p++) {
-        int width = rand() % (max_size - min_size + 1) + min_size;
-        int height = rand() % (max_size - min_size + 1) + min_size;
-        int start_x = rand() % (map->width - width);
-        int start_y = rand() % (map->height - height);
-
-        if (irregular) {
-            int init_start_x = rand() % (map->width - max_size + 1);
-            for (int i = 0; i < height; i++) {
-                width = rand() % (max_size - (int)(0.7 * max_size) + 1) + (int)(0.7 * max_size);
-                start_x = init_start_x - (rand() % 3); // Randomly adjust start_x by -1 or -2
-                for (int j = 0; j < width; j++) {
-                }
-                printf("ici\n");
-                init_start_x = start_x; // Update init_start_x for the next row
-            }
-        } else {
-            for (int i = 0; i < height; i++) {
-                for (int j = 0; j < width; j++) {
-                }
-            }
-        }
-    }
-}
-// World map initialization
 s_WorldMap *createWorldMap() {
   s_WorldMap *worldMap = malloc(sizeof(s_WorldMap));
   worldMap->width = SCREEN_WIDTH / TILE_SIZE;
   worldMap->height = SCREEN_HEIGHT / TILE_SIZE;
-            printf("ici\n");
-  // Allocate 2D array of tiles
+
+  // Allocate memory for tiles
   worldMap->tiles = malloc(sizeof(s_WorldTile *) * worldMap->height);
   for (int y = 0; y < worldMap->height; y++) {
     worldMap->tiles[y] = malloc(sizeof(s_WorldTile) * worldMap->width);
   }
 
+  // Generate noise map
+  int randomOffsetX = GetRandomValue(0, 10000);
+  int randomOffsetY = GetRandomValue(0, 10000);
+  Image noiseMap = GenImagePerlinNoise(worldMap->width, worldMap->height,
+                                       randomOffsetX, randomOffsetY, 4.0f);
+
   for (int y = 0; y < worldMap->height; y++) {
     for (int x = 0; x < worldMap->width; x++) {
-      worldMap->tiles[y][x].type = GRASSLANDS;
+      Color pixel = GetImageColor(noiseMap, x, y);
+      float value = pixel.r / 255.0f; // Convert to 0-1 range
+
+      if (value < 0.2f) {
+        worldMap->tiles[y][x].type = BIOME_WATER;
+      } else if (value < 0.35f) {
+        worldMap->tiles[y][x].type = BIOME_BEACH;
+      } else if (value < 0.5f) {
+        worldMap->tiles[y][x].type = BIOME_PLAINS;
+      } else if (value < 0.65f) {
+        worldMap->tiles[y][x].type = BIOME_FOREST;
+      } else if (value < 0.85f) {
+        worldMap->tiles[y][x].type = BIOME_HILL;
+      } else {
+        worldMap->tiles[y][x].type = BIOME_MOUNTAIN;
+      }
     }
   }
-  generate_patch(worldMap, MOUNTAINS, 5, 10, 15, 1);
-  generate_patch(worldMap, FOREST, 5, 10, 15, 1);
 
+  UnloadImage(noiseMap);
   return worldMap;
 }
 
-// Rendering function
-
-// Memory cleanup
 void destroyWorldMap(s_WorldMap *worldMap) {
   for (int y = 0; y < worldMap->height; y++) {
     free(worldMap->tiles[y]);
@@ -200,33 +172,36 @@ void destroyWorldMap(s_WorldMap *worldMap) {
   free(worldMap->tiles);
   free(worldMap);
 }
-// Initialize the game state
+
 s_GameState *initGameState() {
   if (state == NULL) {
     state = malloc(sizeof(s_GameState));
-    // Rest of initialization
   }
+
   state->assets = malloc(sizeof(s_AssetManager));
   state->assets->grassTextures = malloc(sizeof(Texture2D));
   state->assets->biomeTextures = malloc(sizeof(Texture2D));
-  state->worldMap = malloc(sizeof(s_WorldMap));
-  state->worldMap->tiles =
-      malloc(sizeof(s_WorldTile *) * (SCREEN_HEIGHT / TILE_SIZE));
-  for (int i = 0; i < SCREEN_HEIGHT / TILE_SIZE; i++) {
-    state->worldMap->tiles[i] =
-        malloc(sizeof(s_WorldTile) * (SCREEN_WIDTH / TILE_SIZE));
-  }
+
   state->worldMap = createWorldMap();
-  loadAssets();
-  if (state->assets->characterFrames[0].id == 0 ||
-      state->assets->characterFrames[1].id == 0) {
+  state->worldMap->mapTexture = LoadRenderTexture(SCREEN_WIDTH, SCREEN_HEIGHT);
+
+  if (state->worldMap == NULL) {
     free(state->assets);
     free(state);
     return NULL;
   }
+
+  loadAssets();
+  if (state->assets->characterFrames[0].id == 0 ||
+      state->assets->characterFrames[1].id == 0) {
+    destroyWorldMap(state->worldMap);
+    free(state->assets);
+    free(state);
+    return NULL;
+  }
+
   state->hero = malloc(sizeof(s_Entity));
   state->hero->entityDest = (Rectangle){200, 200, TILE_SIZE, TILE_SIZE};
-
   state->camera.target =
       (Vector2){state->hero->entityDest.x + state->hero->entityDest.width / 2,
                 state->hero->entityDest.y + state->hero->entityDest.height / 2};
@@ -235,9 +210,15 @@ s_GameState *initGameState() {
   state->camera.zoom = 3.0f;
   state->currentFrame = 0;
   state->frameTime = 0;
+
+  drawWorldMap();
   return state;
 }
-
+void cleanupGame() {
+  s_GameState *state = getGameState();
+  UnloadRenderTexture(state->worldMap->mapTexture);
+  // ... other cleanup code ...
+}
 void quit() {
   s_GameState *state = getGameState();
   if (state) {
@@ -254,6 +235,7 @@ void quit() {
     destroyWorldMap(state->worldMap);
     free(state);
   }
+  cleanupGame();
   CloseWindow();
 }
 
