@@ -1,4 +1,4 @@
-#include "../inc/game.h"
+#include "../inc/common.h"
 
 void input() {
 

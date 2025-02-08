@@ -1,3 +1,5 @@
 .direnv
 game
 external
+.emscripten_cache/
+.emscripten_config

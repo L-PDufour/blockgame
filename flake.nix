@@ -1,20 +1,11 @@
 {
   description = "Raylib development environment";
-
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
   };
-
-  outputs =
-    {
-      self,
-      nixpkgs,
-      flake-utils,
-      ...
-    }:
-    flake-utils.lib.eachDefaultSystem (
-      system:
+  outputs = { self, nixpkgs, flake-utils, ... }:
+    flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs { inherit system; };
         toolchain = with pkgs; [
@@ -22,30 +13,23 @@
           clang-tools
           clang
           raylib
-          wayland-scanner
-          libxkbcommon
           wayland
-          glfw-wayland
+          wayland-scanner
           gnumake
-          cmake
-          zig
+          emscripten
+          python3
         ];
       in
       {
         devShells.default = pkgs.mkShell {
-          buildInputs = toolchain ++ [
-          ];
-          LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath (
-            with pkgs;
-            [
-              wayland
-              emscripten
-              libxkbcommon
-              # any other libraries that need to be dynamically linked to
-            ]
-          );
-          # Environment variables and shell hooks
-          shellHook = '''';
+          buildInputs = toolchain;
+      C_INCLUDE_PATH = "${pkgs.emscripten}/share/emscripten/cache/sysroot/include/";
+          LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath (with pkgs; [
+            wayland
+            emscripten
+            libxkbcommon
+          ]);
+
         };
       }
     );

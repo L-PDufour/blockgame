@@ -1,7 +1,5 @@
 #include "../inc/game.h"
-#include "raylib.h"
-#include <stdio.h>
-#include <stdlib.h>
+
 
 s_GameState *state = NULL;
 
@@ -96,13 +94,13 @@ void render() {
 void loadAssets() {
   s_GameState *state = getGameState();
 
-  state->assets->characterFrames[0] = LoadTexture("ressources/human0.png");
+  state->assets->characterFrames[0] = LoadTexture("assets/human0.png");
   if (state->assets->characterFrames[0].id == 0) {
     printf("Failed to load human0.png\n");
     return;
   }
 
-  state->assets->characterFrames[1] = LoadTexture("ressources/human1.png");
+  state->assets->characterFrames[1] = LoadTexture("assets/human1.png");
   if (state->assets->characterFrames[1].id == 0) {
     printf("Failed to load human1.png\n");
     UnloadTexture(state->assets->characterFrames[0]); // Clean up
@@ -119,8 +117,8 @@ void loadAssets() {
     int y = 0;             // y stays 0 since we're only using one row
     state->assets->biomeRects[i] = (Rectangle){x, y, TILE_SIZE, TILE_SIZE};
   }
-  *state->assets->grassTextures = LoadTexture("ressources/grass.png");
-  *state->assets->biomeTextures = LoadTexture("ressources/biomes.png");
+  *state->assets->grassTextures = LoadTexture("assets/grass.png");
+  *state->assets->biomeTextures = LoadTexture("assets/biomes.png");
 }
 
 s_WorldMap *createWorldMap() {
