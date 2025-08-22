@@ -18,18 +18,19 @@
           gnumake
           emscripten
           python3
+          nodejs_20  # Added Node.js
+          nodePackages.npm  # Added npm
         ];
       in
       {
         devShells.default = pkgs.mkShell {
           buildInputs = toolchain;
-      C_INCLUDE_PATH = "${pkgs.emscripten}/share/emscripten/cache/sysroot/include/";
+          C_INCLUDE_PATH = "${pkgs.emscripten}/share/emscripten/cache/sysroot/include/";
           LD_LIBRARY_PATH = pkgs.lib.makeLibraryPath (with pkgs; [
             wayland
             emscripten
             libxkbcommon
           ]);
-
         };
       }
     );
