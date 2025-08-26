@@ -3,3 +3,5 @@ game
 external
 .emscripten_cache/
 .emscripten_config
+.cache/clangd/index
+/build/wasm/

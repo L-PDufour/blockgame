@@ -1,89 +1,71 @@
-#include "raylib.h"
-#include <math.h>
-#include <stdio.h>
-#ifdef PLATFORM_WEB
-#include <emscripten/emscripten.h>
-#endif
+/* clear.c ... */
 
-// Screen dimensions
-#define SCREEN_WIDTH 800
-#define SCREEN_HEIGHT 450
+/*
+ * This example code creates an SDL window and renderer, and then clears the
+ * window to a different color every frame, so you'll effectively get a window
+ * that's smoothly fading between colors.
+ *
+ * This code is public domain. Feel free to use it for any purpose!
+ */
 
-// Simple game state
-typedef struct {
-  Vector2 ballPosition;
-  Vector2 ballSpeed;
-  Color ballColor;
-} GameState;
+#define SDL_MAIN_USE_CALLBACKS 1 /* use the callbacks instead of main() */
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_main.h>
 
-GameState game = {0};
+/* We will use this renderer to draw into this window every frame. */
+static SDL_Window *window = NULL;
+static SDL_Renderer *renderer = NULL;
 
-void UpdateDrawFrame(void);
+/* This function runs once at startup. */
+SDL_AppResult SDL_AppInit(void **appstate, int argc, char *argv[]) {
+  SDL_SetAppMetadata("Example Renderer Clear", "1.0",
+                     "com.example.renderer-clear");
 
-int main(void) {
-  // Initialize raylib
-  printf("Starting Raylib initialization...\n");
-  InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Simple Test - RayWasm");
-
-  // Initialize game state
-  game.ballPosition = (Vector2){SCREEN_WIDTH / 2.0f, SCREEN_HEIGHT / 2.0f};
-  game.ballSpeed = (Vector2){2.0f, 3.0f};
-  game.ballColor = RED;
-
-  printf("Game initialized successfully!\n");
-
-#ifdef PLATFORM_WEB
-  emscripten_set_main_loop(UpdateDrawFrame, 60, 1);
-#else
-  SetTargetFPS(60);
-
-  // Main game loop
-  while (!WindowShouldClose()) {
-    UpdateDrawFrame();
+  if (!SDL_Init(SDL_INIT_VIDEO)) {
+    SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());
+    return SDL_APP_FAILURE;
   }
-#endif
 
-  // De-Initialization
-  CloseWindow();
+  if (!SDL_CreateWindowAndRenderer("examples/renderer/clear", 640, 480, 0,
+                                   &window, &renderer)) {
+    SDL_Log("Couldn't create window/renderer: %s", SDL_GetError());
+    return SDL_APP_FAILURE;
+  }
 
-  return 0;
+  return SDL_APP_CONTINUE; /* carry on with the program! */
 }
 
-void UpdateDrawFrame(void) {
-  // Update
-  game.ballPosition.x += game.ballSpeed.x;
-  game.ballPosition.y += game.ballSpeed.y;
+/* This function runs when a new event (mouse input, keypresses, etc) occurs. */
+SDL_AppResult SDL_AppEvent(void *appstate, SDL_Event *event) {
+  if (event->type == SDL_EVENT_QUIT) {
+    return SDL_APP_SUCCESS; /* end the program, reporting success to the OS. */
+  }
+  return SDL_APP_CONTINUE; /* carry on with the program! */
+}
 
-  // Bounce off edges
-  if ((game.ballPosition.x >= (SCREEN_WIDTH - 20)) ||
-      (game.ballPosition.x <= 20))
-    game.ballSpeed.x *= -1.0f;
-  if ((game.ballPosition.y >= (SCREEN_HEIGHT - 20)) ||
-      (game.ballPosition.y <= 20))
-    game.ballSpeed.y *= -1.0f;
+/* This function runs once per frame, and is the heart of the program. */
+SDL_AppResult SDL_AppIterate(void *appstate) {
+  const double now = ((double)SDL_GetTicks()) /
+                     1000.0; /* convert from milliseconds to seconds. */
+  /* choose the color for the frame we will draw. The sine wave trick makes it
+   * fade between colors smoothly. */
+  const float red = (float)(0.5 + 0.5 * SDL_sin(now));
+  const float green = (float)(0.5 + 0.5 * SDL_sin(now + SDL_PI_D * 2 / 3));
+  const float blue = (float)(0.5 + 0.5 * SDL_sin(now + SDL_PI_D * 4 / 3));
+  SDL_SetRenderDrawColorFloat(
+      renderer, red, green, blue,
+      SDL_ALPHA_OPAQUE_FLOAT); /* new color, full alpha. */
 
-  // Change color over time
-  static float colorTime = 0.0f;
-  colorTime += 0.02f;
-  game.ballColor =
-      (Color){(unsigned char)(127 + 127 * sin(colorTime)),
-              (unsigned char)(127 + 127 * sin(colorTime + 2.0f)),
-              (unsigned char)(127 + 127 * sin(colorTime + 4.0f)), 255};
+  /* clear the window to the draw color. */
+  SDL_RenderClear(renderer);
 
-  // Draw
-  BeginDrawing();
+  /* put the newly-cleared rendering on the screen. */
+  SDL_RenderPresent(renderer);
 
-  ClearBackground(DARKBLUE);
+  return SDL_APP_CONTINUE; /* carry on with the program! */
+}
 
-  // Draw bouncing ball
-  DrawCircleV(game.ballPosition, 20, game.ballColor);
-
-  // Draw text
-  DrawText("Simple Raylib Test", 10, 10, 20, WHITE);
-  DrawText("If you see this, Raylib is working!", 10, 40, 16, LIGHTGRAY);
-
-  // Show FPS
-  DrawFPS(10, SCREEN_HEIGHT - 30);
-
-  EndDrawing();
+/* This function runs once at shutdown. */
+void SDL_AppQuit(void *appstate, SDL_AppResult result) {
+  /* SDL will clean up the window/renderer for us. */
 }

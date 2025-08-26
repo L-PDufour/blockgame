@@ -1,0 +1,7 @@
+[
+  {
+    "directory": "/home/desktop/Documents/raywasm",
+    "command": "gcc -Wall -Wextra -std=c99 -O2 -I/nix/store/hb3k1qhp0c63b6mlw9in8rf9f0djz58k-sdl3-3.2.18-dev/include -c src/main.c -o build/main.o",
+    "file": "src/main.c"
+  }
+]
